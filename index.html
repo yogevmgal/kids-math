@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#6c4cf5">
+<meta name="robots" content="noindex">
+<title>תרגול חשבון יומי</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%A7%AE%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg1: #fff6e6; --bg2: #eef3ff;
+    --card: #ffffff; --ink: #1f2330; --muted: #6b7183; --line: #e6e8f0;
+    --brand: #6c4cf5; --brand-soft: #efeaff; --sun: #ff9f1c; --ok: #1fa356; --ok-soft: #e3f7ea;
+    --bad: #e5484d; --bad-soft: #fdeaea; --blue: #2f6fd6; --gold: #f5b301;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; }
+  body {
+    font-family: 'Rubik', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+    color: var(--ink); background: linear-gradient(160deg, var(--bg1), var(--bg2)); min-height: 100vh;
+  }
+  button { font-family: inherit; cursor: pointer; border: 0; }
+  .wrap { max-width: 520px; margin: 0 auto; padding: 12px 16px 140px; }
+  .center { text-align: center; }
+  .muted { color: var(--muted); }
+
+  /* top bar */
+  .top { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .top .av { font-size: 34px; line-height: 1; }
+  .top .nm { font-weight: 800; font-size: 20px; flex: 1; }
+  .pill { background: #fff; border-radius: 999px; padding: 6px 12px; font-weight: 800; font-size: 16px; box-shadow: 0 2px 6px rgba(30,35,60,.08); white-space: nowrap; }
+  .progress { height: 12px; background: #fff; border-radius: 99px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,.08); margin-bottom: 14px; }
+  .progress > div { height: 100%; background: linear-gradient(90deg, var(--sun), var(--brand)); border-radius: 99px; transition: width .4s; }
+
+  .card { background: var(--card); border-radius: 22px; padding: 18px 16px; box-shadow: 0 6px 22px rgba(40,40,90,.10); }
+  .chip { display: inline-block; background: var(--brand-soft); color: var(--brand); font-weight: 600; font-size: 14px; border-radius: 99px; padding: 4px 12px; margin-bottom: 10px; }
+  .challenge-banner { background: linear-gradient(90deg, #ffcf3f, #ff8a3d); color: #3b2300; font-weight: 800; border-radius: 14px; padding: 10px; text-align: center; margin-bottom: 12px; font-size: 18px; }
+  .prompt { font-size: 21px; font-weight: 600; line-height: 1.45; margin: 4px 0 12px; }
+  .big { font-size: 24px; font-weight: 800; text-align: center; background: var(--brand-soft); border-radius: 16px; padding: 14px 10px; margin: 8px 0 12px; line-height: 1.5; }
+  .expr { direction: ltr; unicode-bidi: isolate; font-size: 34px; font-weight: 800; text-align: center; margin: 10px 0 14px; letter-spacing: .5px; word-spacing: 4px; }
+  .blank { display: inline-block; min-width: 54px; padding: 0 6px; border: 3px dashed var(--brand); border-radius: 12px; color: var(--brand); }
+  .vis { width: 100%; height: auto; display: block; margin: 4px auto 12px; }
+  .vis-box { margin: 4px 0 12px; }
+  .clocks { display: flex; gap: 10px; justify-content: center; }
+  .clocks > div { flex: 1; max-width: 200px; text-align: center; font-weight: 600; color: var(--muted); }
+  .series { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 8px 0 14px; }
+  .series span { min-width: 52px; padding: 10px 8px; border-radius: 14px; background: #fff; border: 3px solid var(--line); font-size: 24px; font-weight: 800; text-align: center; direction: ltr; }
+  .series span.q { border-color: var(--brand); border-style: dashed; color: var(--brand); }
+  .arr { display: grid; gap: 4px; justify-content: center; direction: ltr; margin: 6px 0 14px; font-size: 26px; line-height: 1.1; }
+
+  /* answer input */
+  .display { direction: ltr; text-align: center; font-size: 36px; font-weight: 800; background: #fff; border: 3px solid var(--brand); border-radius: 16px; padding: 8px; min-height: 64px; margin: 6px 0 12px; letter-spacing: 2px; }
+  .display.empty { color: #c5c8d6; }
+  .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; direction: ltr; }
+  .key { height: 58px; border-radius: 16px; background: #fff; font-size: 28px; font-weight: 800; color: var(--ink); box-shadow: 0 3px 0 #d9dcea; }
+  .key:active { transform: translateY(2px); box-shadow: 0 1px 0 #d9dcea; }
+  .key.del { background: #f4f5f9; font-size: 24px; }
+  .key.go { background: var(--ok); color: #fff; box-shadow: 0 3px 0 #15803f; }
+  .key.go:disabled { background: #b8dcc6; box-shadow: none; }
+  .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .choices.one { grid-template-columns: 1fr; }
+  .choices.three { grid-template-columns: 1fr 1fr 1fr; }
+  .choice { min-height: 60px; border-radius: 16px; background: #fff; border: 3px solid var(--line); font-size: 21px; font-weight: 600; padding: 8px 10px; color: var(--ink); }
+  .choice.sym { font-size: 34px; font-weight: 800; }
+  .choice.right { border-color: var(--ok); background: var(--ok-soft); }
+  .choice.wrong { border-color: var(--bad); background: var(--bad-soft); }
+  .choice:disabled { color: var(--ink); opacity: 1; }
+
+  /* feedback sheet */
+  .sheet { position: fixed; left: 0; right: 0; bottom: 0; padding: 16px 16px calc(16px + env(safe-area-inset-bottom)); border-radius: 24px 24px 0 0; box-shadow: 0 -8px 30px rgba(0,0,0,.15); transform: translateY(110%); transition: transform .3s ease; z-index: 20; }
+  .sheet.show { transform: none; }
+  .sheet .inner { max-width: 520px; margin: 0 auto; }
+  .sheet.ok { background: var(--ok-soft); }
+  .sheet.bad { background: #fff3f0; }
+  .sheet h3 { margin: 0 0 6px; font-size: 24px; }
+  .sheet .explain { font-size: 18px; margin: 4px 0 12px; line-height: 1.5; }
+  .btn { display: block; width: 100%; height: 58px; border-radius: 16px; font-size: 22px; font-weight: 800; color: #fff; background: var(--brand); box-shadow: 0 4px 0 #4b30c9; }
+  .btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #4b30c9; }
+  .btn.green { background: var(--ok); box-shadow: 0 4px 0 #15803f; }
+  .btn.ghost { background: #fff; color: var(--brand); box-shadow: 0 3px 0 #d9dcea; }
+
+  /* screens */
+  .hero { font-size: 92px; text-align: center; margin: 24px 0 6px; animation: bob 2.2s ease-in-out infinite; }
+  @keyframes bob { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-10px) } }
+  h1 { font-size: 30px; margin: 6px 0 8px; text-align: center; }
+  .lead { font-size: 20px; text-align: center; line-height: 1.5; margin: 0 0 18px; }
+  .avatars { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 14px 0; }
+  .avatars button { font-size: 44px; height: 76px; border-radius: 18px; background: #fff; box-shadow: 0 3px 0 #d9dcea; }
+  .stats { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 12px 0 18px; }
+  .ring { width: 150px; height: 150px; border-radius: 50%; margin: 10px auto; display: grid; place-items: center; font-size: 46px; font-weight: 800; }
+  .ring span { width: 118px; height: 118px; border-radius: 50%; background: #fff; display: grid; place-items: center; }
+  .levelups { background: #fff; border-radius: 18px; padding: 12px 14px; margin: 12px 0; box-shadow: 0 3px 12px rgba(0,0,0,.06); }
+  .levelups div { font-size: 18px; padding: 4px 0; }
+  .spinner { width: 54px; height: 54px; border: 6px solid var(--brand-soft); border-top-color: var(--brand); border-radius: 50%; margin: 120px auto 16px; animation: spin 0.9s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg) } }
+  .busy { opacity: .6; pointer-events: none; }
+
+  /* effects */
+  #fx { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 30; }
+  .confetti { position: absolute; top: -40px; font-size: 26px; animation: fall linear forwards; }
+  @keyframes fall { to { transform: translateY(110vh) rotate(540deg); } }
+  .floaty { position: fixed; font-size: 28px; font-weight: 800; color: var(--gold); text-shadow: 0 2px 0 #fff; animation: floatUp 1s ease-out forwards; z-index: 31; }
+  @keyframes floatUp { from { opacity: 1; transform: translateY(0) scale(1) } to { opacity: 0; transform: translateY(-70px) scale(1.4) } }
+  .pop { animation: pop .35s ease; }
+  @keyframes pop { 50% { transform: scale(1.25) } }
+  .shake { animation: shake .4s ease; }
+  @keyframes shake { 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
+</style>
+</head>
+<body>
+<div id="app" class="wrap"></div>
+<div id="sheet" class="sheet"><div class="inner" id="sheetInner"></div></div>
+<div id="fx"></div>
+
+<script>
+window.API_URL = "https://script.google.com/macros/s/AKfycbxMeO2w4cede_8xS413BiOv27wUAL1UhWFoIdSuUtwOw0ZfYeKtGKWrN5PKTxJcTrjuJA/exec";
+var TOKEN = document.body.getAttribute('data-token') || new URLSearchParams(location.search).get('k') || '';
+
+var AVATARS = ['🦊', '🐼', '🦁', '🐸', '🐵', '🦄', '🐯', '🐧', '🐙', '🦖', '🐨', '🚀'];
+var PRAISE = ['כל הכבוד! 🎉', 'מעולה! 🌟', 'יופי! 👏', 'בול! 🎯', 'אלופים! 🏆', 'מדהים! 🤩', 'וואו! 💥', 'נכון מאוד! ✅'];
+var OOPS = ['כמעט! 💪', 'לא נורא, ממשיכים! 🙂', 'אופס! הנה התשובה 👇'];
+var S = { data: null, idx: 0, stars: 0, input: '', busy: false, answered: false };
+var app = document.getElementById('app');
+var sheet = document.getElementById('sheet');
+var sheetInner = document.getElementById('sheetInner');
+var lockTimer = null;
+
+// ---------------------------------------------------------------- utils
+function esc(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
+function fmt(n) { return n >= 1000 ? String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',') : String(n); }
+function call(fn) {
+  var args = Array.prototype.slice.call(arguments, 1);
+  return new Promise(function (resolve, reject) {
+    if (window.MOCK) {
+      setTimeout(function () { try { resolve(window.MOCK[fn].apply(null, args)); } catch (e) { reject(e); } }, 150);
+      return;
+    }
+    if (window.API_URL) { // standalone page: plain POST, no Google cookies (works with Family Link)
+      fetch(window.API_URL, { method: 'POST', body: JSON.stringify({ fn: fn, args: args }), credentials: 'omit', redirect: 'follow' })
+        .then(function (r) { return r.json(); })
+        .then(function (j) { if (j.ok) resolve(j.result); else reject(new Error(j.error)); })
+        .catch(reject);
+      return;
+    }
+    var r = google.script.run.withSuccessHandler(resolve).withFailureHandler(reject);
+    r[fn].apply(r, args);
+  });
+}
+function show(html) { hideSheet(); app.innerHTML = html; window.scrollTo(0, 0); }
+function hideSheet() { sheet.className = 'sheet'; }
+function showError(e) {
+  show('<div class="hero">🙈</div><h1>אופס, משהו השתבש</h1><p class="lead">' + esc(e && e.message ? e.message : e) +
+    '</p><button class="btn" onclick="init()">לנסות שוב</button>');
+}
+function confetti(n) {
+  var fx = document.getElementById('fx');
+  var items = ['🎉', '⭐', '✨', '🎈', '🟣', '🟡', '🟢', '🔵'];
+  for (var i = 0; i < (n || 50); i++) {
+    var s = document.createElement('span');
+    s.className = 'confetti';
+    s.textContent = pick(items);
+    s.style.left = Math.random() * 100 + 'vw';
+    s.style.animationDuration = (1.8 + Math.random() * 1.8) + 's';
+    s.style.animationDelay = (Math.random() * 0.6) + 's';
+    fx.appendChild(s);
+    setTimeout(function (el) { el.remove(); }, 4200, s);
+  }
+}
+function floaty(text, el) {
+  var r = el ? el.getBoundingClientRect() : { left: window.innerWidth / 2, top: 80 };
+  var f = document.createElement('div');
+  f.className = 'floaty';
+  f.textContent = text;
+  f.style.left = (r.left + 10) + 'px';
+  f.style.top = (r.top + 10) + 'px';
+  document.body.appendChild(f);
+  setTimeout(function () { f.remove(); }, 1100);
+}
+
+// ----------------------------------------------------------------- flow
+function init() {
+  if (lockTimer) { clearInterval(lockTimer); lockTimer = null; }
+  show('<div class="spinner"></div><p class="center muted">טוען...</p>');
+  call('api_state', TOKEN).then(onState).catch(showError);
+}
+
+function onState(d) {
+  S.data = d;
+  if (!d.kid.avatar) return renderAvatar();
+  if (d.status === 'locked') return renderLocked(d);
+  if (d.status === 'done') return renderSummary(d.summary, true);
+  S.idx = 0;
+  S.stars = 0;
+  d.answers.forEach(function (a, i) {
+    if (a && a.ok) S.stars += d.questions[i].kind === 'challenge' ? 3 : 1;
+  });
+  while (S.idx < d.questions.length && d.answers[S.idx]) S.idx++;
+  if (S.idx === 0) renderIntro(); else renderQuestion();
+}
+
+function renderAvatar() {
+  var html = '<div class="hero">👋</div><h1>היי ' + esc(S.data.kid.name) + '!</h1>' +
+    '<p class="lead">בחרו דמות שתלווה אתכם בתרגול:</p><div class="avatars">';
+  AVATARS.forEach(function (a) { html += '<button onclick="chooseAvatar(\'' + a + '\')">' + a + '</button>'; });
+  show(html + '</div>');
+}
+function chooseAvatar(a) {
+  app.classList.add('busy');
+  call('api_setAvatar', TOKEN, a).then(function () {
+    app.classList.remove('busy');
+    S.data.kid.avatar = a;
+    onState(S.data);
+  }).catch(function (e) { app.classList.remove('busy'); showError(e); });
+}
+
+function renderLocked(d) {
+  var target = Date.now() + d.minutesLeft * 60000;
+  function left() {
+    var m = Math.max(0, Math.ceil((target - Date.now()) / 60000));
+    var h = Math.floor(m / 60), mm = m % 60;
+    if (h === 0) return 'עוד ' + mm + ' דקות';
+    return 'עוד ' + h + (h === 1 ? ' שעה' : ' שעות') + (mm ? ' ו-' + mm + ' דקות' : '');
+  }
+  show('<div class="hero">' + esc(d.kid.avatar) + '</div><h1>התרגול של היום ייפתח ב-' + d.unlockHour + ':00</h1>' +
+    '<p class="lead" id="left">' + left() + '</p>' + statsHtml(d.streak, d.totalStars) +
+    '<p class="lead">⏰ נתראה אחר הצהריים!</p>');
+  lockTimer = setInterval(function () {
+    if (Date.now() >= target) return init();
+    var el = document.getElementById('left');
+    if (el) el.textContent = left();
+  }, 20000);
+}
+
+function statsHtml(streak, totalStars) {
+  return '<div class="stats"><span class="pill">🔥 ' + (streak || 0) + ' ימים ברצף</span>' +
+    '<span class="pill">⭐ ' + (totalStars || 0) + ' כוכבים בסך הכל</span></div>';
+}
+
+function renderIntro() {
+  var d = S.data, n = d.questions.length;
+  show('<div class="hero">' + esc(d.kid.avatar) + '</div><h1>היי ' + esc(d.kid.name) + '!</h1>' +
+    '<p class="lead">היום מחכות לך ' + (n - 1) + ' שאלות, ובסוף — שאלת אתגר ⚡ עם בונוס של 3 כוכבים!</p>' +
+    statsHtml(d.streak, d.totalStars) +
+    '<button class="btn" onclick="renderQuestion()">יאללה, מתחילים! 🚀</button>');
+}
+
+// -------------------------------------------------------------- question
+function renderQuestion() {
+  var d = S.data, q = d.questions[S.idx], n = d.questions.length;
+  S.input = '';
+  S.answered = false;
+  var html = '<div class="top"><span class="av">' + esc(d.kid.avatar) + '</span><span class="nm">' + esc(d.kid.name) + '</span>' +
+    '<span class="pill" id="stars">⭐ ' + S.stars + '</span></div>' +
+    '<div class="progress"><div style="width:' + Math.round(100 * S.idx / n) + '%"></div></div>' +
+    '<p class="center muted" id="saveBadge" style="display:' + (S.queue.length && S.queue[0].tries ? 'block' : 'none') + ';margin:-6px 0 10px;font-size:14px">⚠️ אין חיבור לאינטרנט — התשובות יישמרו כשהחיבור יחזור</p>' +
+    '<div class="card" id="card">';
+  if (q.kind === 'challenge') html += '<div class="challenge-banner">⚡ שאלת אתגר! תשובה נכונה = 3 כוכבים</div>';
+  html += '<span class="chip">' + esc(q.topicName) + ' · רמה ' + Math.floor(q.level) + '</span>' +
+    '<span class="chip" style="background:#fff3df;color:#b86b00">שאלה ' + (S.idx + 1) + ' מתוך ' + n + '</span>' +
+    '<div class="prompt">' + esc(q.prompt) + '</div>';
+  if (q.big) html += '<div class="big">' + esc(q.big) + '</div>';
+  if (q.expr) html += '<div class="expr">' + esc(q.expr).replace('☐', '<span class="blank">?</span>') + '</div>';
+  if (q.visual) html += renderVisual(q.visual);
+  html += '</div><div style="height:14px"></div>';
+  if (q.type === 'mc') {
+    var long = q.choices.some(function (c) { return c.length > 12; });
+    html += q.symbols ? '<div class="choices three" dir="ltr" id="choices">'
+      : '<div class="choices' + (long ? ' one' : '') + '" id="choices">';
+    q.choices.forEach(function (c, i) {
+      html += '<button class="choice' + (q.symbols ? ' sym' : '') + '" dir="auto" data-i="' + i + '" onclick="answerChoice(' + i + ')">' + esc(c) + '</button>';
+    });
+    html += '</div>';
+  } else {
+    html += '<div class="display empty" id="display">?</div><div class="keypad" id="keypad">';
+    ['1', '2', '3', '4', '5', '6', '7', '8', '9'].forEach(function (k) { html += '<button class="key" onclick="press(\'' + k + '\')">' + k + '</button>'; });
+    html += '<button class="key del" onclick="press(\'del\')">⌫</button><button class="key" onclick="press(\'0\')">0</button>' +
+      '<button class="key go" id="go" disabled onclick="submitNum()">✓</button></div>';
+  }
+  show(html);
+}
+
+function press(k) {
+  if (S.answered) return;
+  if (k === 'del') S.input = S.input.slice(0, -1);
+  else if (S.input.length < 6) S.input = (S.input === '0' ? '' : S.input) + k;
+  var el = document.getElementById('display');
+  el.textContent = S.input ? fmt(Number(S.input)) : '?';
+  el.className = 'display' + (S.input ? '' : ' empty');
+  document.getElementById('go').disabled = !S.input;
+}
+document.addEventListener('keydown', function (e) {
+  if (!document.getElementById('keypad') || S.answered) {
+    if (e.key === 'Enter' && sheet.classList.contains('show')) { var b = document.getElementById('nextBtn'); if (b) b.click(); }
+    return;
+  }
+  if (/^\d$/.test(e.key)) press(e.key);
+  else if (e.key === 'Backspace') press('del');
+  else if (e.key === 'Enter' && S.input) submitNum();
+});
+
+function submitNum() { if (S.input) submit(S.input, null); }
+function answerChoice(i) {
+  var q = S.data.questions[S.idx];
+  submit(q.choices[i], i);
+}
+
+// Instant feedback on the phone; the answer is saved to Google in the background
+// (the server re-checks it and owns the grade).
+var KEY_XOR = 0x5A;
+function decodeKey(k) {
+  return JSON.parse(String.fromCharCode.apply(null, k.map(function (c) { return c ^ KEY_XOR; })));
+}
+function localCheck(q, value, answer) {
+  if (q.type === 'num') {
+    var v = String(value).replace(/[,\s]/g, '');
+    return v !== '' && /^\d+$/.test(v) && Number(v) === Number(answer);
+  }
+  return String(value) === String(answer);
+}
+
+function submit(value, choiceIdx) {
+  if (S.answered) return;
+  S.answered = true;
+  var q = S.data.questions[S.idx];
+  var k = decodeKey(q.key);
+  enqueueSave(S.idx, value);
+  feedback({ ok: localCheck(q, value, k[0]), correctAnswer: k[0], explain: k[1], done: S.idx === S.data.questions.length - 1 }, choiceIdx);
+}
+
+// ------------------------------------------------------------ save queue
+S.queue = []; S.saving = false; S.lastRes = null; S.waiters = [];
+function enqueueSave(idx, value) { S.queue.push({ idx: idx, value: value, tries: 0 }); pump(); }
+function pump() {
+  if (S.saving || !S.queue.length) return;
+  S.saving = true;
+  var it = S.queue[0];
+  call('api_answer', TOKEN, S.data.date, it.idx, it.value).then(function (res) {
+    S.queue.shift();
+    S.saving = false;
+    S.lastRes = res;
+    saveBadge(false);
+    if (S.queue.length) pump();
+    else { var w = S.waiters; S.waiters = []; w.forEach(function (f) { f(); }); }
+  }).catch(function () {
+    S.saving = false;
+    it.tries++;
+    saveBadge(true);
+    setTimeout(pump, Math.min(15000, 1000 * Math.pow(2, it.tries)));
+  });
+}
+function whenSaved(cb) { if (!S.queue.length && !S.saving) cb(); else S.waiters.push(cb); }
+function saveBadge(problem) {
+  var el = document.getElementById('saveBadge');
+  if (el) el.style.display = problem ? 'block' : 'none';
+}
+window.addEventListener('beforeunload', function (e) {
+  if (S.queue.length) { e.preventDefault(); e.returnValue = ''; }
+});
+
+function feedback(res, choiceIdx) {
+  var q = S.data.questions[S.idx];
+  S.data.answers[S.idx] = { ok: res.ok };
+  if (q.type === 'mc') {
+    var btns = document.querySelectorAll('.choice');
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].disabled = true;
+      if (q.choices[i] === res.correctAnswer) btns[i].classList.add('right');
+      else if (i === choiceIdx) btns[i].classList.add('wrong');
+    }
+  } else {
+    var disp = document.getElementById('display');
+    disp.style.borderColor = res.ok ? 'var(--ok)' : 'var(--bad)';
+    disp.style.background = res.ok ? 'var(--ok-soft)' : 'var(--bad-soft)';
+    disp.classList.add(res.ok ? 'pop' : 'shake');
+  }
+  var html;
+  if (res.ok) {
+    var add = q.kind === 'challenge' ? 3 : 1;
+    S.stars += add;
+    var st = document.getElementById('stars');
+    if (st) { st.textContent = '⭐ ' + S.stars; st.classList.add('pop'); floaty('+' + add + ' ⭐', st); }
+    if (q.kind === 'challenge') confetti(40);
+    html = '<h3>' + pick(PRAISE) + '</h3>';
+  } else {
+    var shown = /^\d+$/.test(res.correctAnswer) ? fmt(Number(res.correctAnswer)) : res.correctAnswer;
+    html = '<h3>' + pick(OOPS) + '</h3><div class="explain">התשובה הנכונה: <b dir="auto">' + esc(shown) + '</b></div>';
+    if (res.explain) html += '<div class="explain" dir="auto">' + esc(res.explain) + '</div>';
+  }
+  var last = res.done;
+  html += '<button class="btn ' + (res.ok ? 'green' : '') + '" id="nextBtn">' + (last ? 'לסיכום 🏁' : 'לשאלה הבאה ←') + '</button>';
+  sheetInner.innerHTML = html;
+  sheet.className = 'sheet show ' + (res.ok ? 'ok' : 'bad');
+  document.getElementById('nextBtn').onclick = function () {
+    if (last) {
+      show('<div class="hero">🧮</div><h1>מחשבים את התוצאות...</h1><div class="spinner" style="margin-top:20px"></div>' +
+        '<p class="center muted" id="saveBadge" style="display:' + (S.queue.length && S.queue[0].tries ? 'block' : 'none') + '">⚠️ אין חיבור לאינטרנט — מנסים שוב...</p>');
+      whenSaved(function () {
+        if (S.lastRes && S.lastRes.summary) renderSummary(S.lastRes.summary, false);
+        else init();
+      });
+      return;
+    }
+    S.idx++;
+    renderQuestion();
+  };
+}
+
+// --------------------------------------------------------------- summary
+function renderSummary(sum, already) {
+  var d = S.data, g = sum.grade;
+  var msg = g >= 95 ? 'מושלם! איזה אלופים! 🏆' : (g >= 80 ? 'עבודה מצוינת! 🌟' : (g >= 60 ? 'יפה מאוד! ממשיכים ככה 💪' : 'כל יום משתפרים! מחר עוד יותר 💪'));
+  var color = g >= 80 ? 'var(--ok)' : (g >= 60 ? 'var(--sun)' : 'var(--brand)');
+  var html = '<div class="hero" style="font-size:70px">' + esc(d.kid.avatar) + '</div>' +
+    '<h1>' + (already ? 'התרגול של היום הושלם ✅' : 'סיימת את התרגול! 🎉') + '</h1>' +
+    '<div class="ring" style="background:conic-gradient(' + color + ' ' + (g * 3.6) + 'deg, #e9eaf2 0)"><span>' + g + '</span></div>' +
+    '<p class="lead"><b>' + msg + '</b><br>' + sum.correct + ' מתוך ' + sum.total + ' תשובות נכונות' +
+    (sum.challengeOk ? '<br>⚡ פתרת את שאלת האתגר!' : '') + '</p>' +
+    '<div class="stats"><span class="pill">⭐ ' + sum.stars + ' כוכבים היום</span><span class="pill">🔥 ' + sum.streak + ' ימים ברצף</span></div>';
+  if (sum.levelUps && sum.levelUps.length) {
+    html += '<div class="levelups"><b>⬆️ עלית רמה ב:</b>';
+    sum.levelUps.forEach(function (u) { html += '<div>🏅 ' + esc(u.name) + ' — רמה ' + u.level + '</div>'; });
+    html += '</div>';
+  }
+  html += '<p class="lead">נתראה מחר ב-14:00 👋</p>';
+  if (d.kid.isTest) html += '<button class="btn ghost" onclick="resetTest()">להתחיל מחדש (מצב בדיקה)</button>';
+  show(html);
+  if (!already && g >= 80) confetti(70);
+}
+
+function resetTest() {
+  call('api_resetTest', TOKEN).then(init).catch(showError);
+}
+
+// --------------------------------------------------------------- visuals
+function renderVisual(v) {
+  switch (v.kind) {
+    case 'series': return '<div class="series">' + v.items.map(function (x) { return '<span' + (x === '?' ? ' class="q"' : '') + '>' + esc(x) + '</span>'; }).join('') + '</div>';
+    case 'numline': return vNumline(v);
+    case 'bar': return vBar(v);
+    case 'clock': return '<div style="max-width:230px;margin:0 auto">' + vClock(v.h, v.m) + '</div>';
+    case 'clocks': return '<div class="clocks"><div>' + vClock(v.a.h, v.a.m) + 'התחלה</div><div>' + vClock(v.b.h, v.b.m) + 'סוף</div></div>';
+    case 'ruler': return vRuler(v);
+    case 'array': return vArray(v);
+    case 'tri': return vTri(v);
+    case 'fan': return vFan(v);
+    case 'polyline': return vPolyline(v);
+  }
+  return '';
+}
+
+function svg(w, h, body, maxW) {
+  return '<svg class="vis" viewBox="0 0 ' + w + ' ' + h + '" style="max-width:' + (maxW || w) + 'px" xmlns="http://www.w3.org/2000/svg" font-family="Rubik, Arial, sans-serif">' + body + '</svg>';
+}
+function txt(x, y, s, size, extra) {
+  return '<text x="' + x + '" y="' + y + '" font-size="' + (size || 14) + '" text-anchor="middle" ' + (extra || '') + '>' + esc(s) + '</text>';
+}
+
+function vNumline(v) {
+  var W = 360, H = 100, p = 24, n = v.count, dx = (W - 2 * p) / (n - 1), y = 60, b = '';
+  b += '<line x1="6" y1="' + y + '" x2="' + (W - 6) + '" y2="' + y + '" stroke="#1f2330" stroke-width="3"/>';
+  b += '<polygon points="' + (W - 2) + ',' + y + ' ' + (W - 14) + ',' + (y - 7) + ' ' + (W - 14) + ',' + (y + 7) + '" fill="#1f2330"/>';
+  for (var i = 0; i < n; i++) {
+    var x = p + i * dx;
+    b += '<line x1="' + x + '" y1="' + (y - 10) + '" x2="' + x + '" y2="' + (y + 10) + '" stroke="#1f2330" stroke-width="2.5"/>';
+    if (v.labels.indexOf(i) !== -1) b += txt(x, y + 32, fmt(v.start + v.step * i), 15, 'font-weight="700" direction="ltr"');
+  }
+  var mx = p + v.mark * dx;
+  b += '<line x1="' + mx + '" y1="' + (y - 52) + '" x2="' + mx + '" y2="' + (y - 30) + '" stroke="#e5484d" stroke-width="4"/>';
+  b += '<polygon points="' + (mx - 9) + ',' + (y - 32) + ' ' + (mx + 9) + ',' + (y - 32) + ' ' + mx + ',' + (y - 13) + '" fill="#e5484d"/>';
+  return svg(W, H, b);
+}
+
+function vBar(v) {
+  var W = 360, H = 260, left = 42, right = 10, top = 40, bottom = 34;
+  var pw = W - left - right, ph = H - top - bottom, b = '';
+  var colors = ['#6c4cf5', '#ff9f1c', '#1fa356', '#2f6fd6', '#e5484d'];
+  b += txt(W / 2, 20, v.title, 15, 'font-weight="700"');
+  for (var g = 0; g <= v.top; g += v.grid) {
+    var y = top + ph * (1 - g / v.top);
+    b += '<line x1="' + left + '" y1="' + y + '" x2="' + (W - right) + '" y2="' + y + '" stroke="#e1e4ee" stroke-width="1"/>';
+    b += '<text x="' + (left - 6) + '" y="' + (y + 4) + '" font-size="12" text-anchor="end" direction="ltr" fill="#6b7183">' + g + '</text>';
+  }
+  b += '<line x1="' + left + '" y1="' + top + '" x2="' + left + '" y2="' + (top + ph) + '" stroke="#1f2330" stroke-width="2"/>';
+  b += '<line x1="' + left + '" y1="' + (top + ph) + '" x2="' + (W - right) + '" y2="' + (top + ph) + '" stroke="#1f2330" stroke-width="2"/>';
+  var n = v.values.length, slot = pw / n, bw = slot * 0.56;
+  v.values.forEach(function (val, i) {
+    var h = ph * val / v.top, x = left + slot * i + (slot - bw) / 2;
+    b += '<rect x="' + x + '" y="' + (top + ph - h) + '" width="' + bw + '" height="' + h + '" rx="5" fill="' + colors[i % colors.length] + '"/>';
+    b += txt(x + bw / 2, H - 12, v.labels[i], 14, 'font-weight="600"');
+  });
+  return svg(W, H, b);
+}
+
+function vClock(h, m) {
+  var c = 100, b = '';
+  b += '<circle cx="100" cy="100" r="94" fill="#fff" stroke="#1f2330" stroke-width="5"/>';
+  for (var i = 0; i < 60; i++) {
+    var a = i * 6 * Math.PI / 180, big = i % 5 === 0;
+    var r1 = big ? 80 : 86, r2 = 91;
+    b += '<line x1="' + (c + r1 * Math.sin(a)) + '" y1="' + (c - r1 * Math.cos(a)) + '" x2="' + (c + r2 * Math.sin(a)) + '" y2="' + (c - r2 * Math.cos(a)) +
+      '" stroke="#1f2330" stroke-width="' + (big ? 3 : 1.2) + '"/>';
+  }
+  for (var k = 1; k <= 12; k++) {
+    var ang = k * 30 * Math.PI / 180;
+    b += '<text x="' + (c + 66 * Math.sin(ang)) + '" y="' + (c - 66 * Math.cos(ang) + 7) + '" font-size="20" font-weight="800" text-anchor="middle" direction="ltr">' + k + '</text>';
+  }
+  var ha = ((h % 12) + m / 60) * 30 * Math.PI / 180, ma = m * 6 * Math.PI / 180;
+  b += '<line x1="100" y1="100" x2="' + (c + 46 * Math.sin(ha)) + '" y2="' + (c - 46 * Math.cos(ha)) + '" stroke="#1f2330" stroke-width="8" stroke-linecap="round"/>';
+  b += '<line x1="100" y1="100" x2="' + (c + 74 * Math.sin(ma)) + '" y2="' + (c - 74 * Math.cos(ma)) + '" stroke="#2f6fd6" stroke-width="5" stroke-linecap="round"/>';
+  b += '<circle cx="100" cy="100" r="7" fill="#e5484d"/>';
+  return svg(200, 200, b, 230);
+}
+
+function vRuler(v) {
+  var W = 360, p = 16, pc = (W - 2 * p) / v.cm, b = '';
+  function X(cm) { return p + cm * pc; }
+  var x1 = X(v.from), x2 = X(v.to), tip = Math.min(16, (x2 - x1) / 3), er = Math.min(10, (x2 - x1) / 5);
+  b += '<rect x="' + x1 + '" y="20" width="' + er + '" height="22" rx="3" fill="#ff8fab"/>';
+  b += '<rect x="' + (x1 + er) + '" y="20" width="' + (x2 - x1 - er - tip) + '" height="22" fill="#ffc83d" stroke="#d69a00" stroke-width="1.5"/>';
+  b += '<polygon points="' + (x2 - tip) + ',20 ' + x2 + ',31 ' + (x2 - tip) + ',42" fill="#f3d9a4" stroke="#d69a00" stroke-width="1.5"/>';
+  b += '<line x1="' + x1 + '" y1="44" x2="' + x1 + '" y2="62" stroke="#e5484d" stroke-width="2" stroke-dasharray="4 3"/>';
+  b += '<line x1="' + x2 + '" y1="33" x2="' + x2 + '" y2="62" stroke="#e5484d" stroke-width="2" stroke-dasharray="4 3"/>';
+  b += '<rect x="4" y="62" width="' + (W - 8) + '" height="58" rx="6" fill="#fdf1c7" stroke="#c9a227" stroke-width="2"/>';
+  for (var i = 0; i <= v.cm * 10; i++) {
+    var x = X(i / 10), len;
+    if (i % 10 === 0) len = 22; else if (!v.mm) continue; else len = i % 5 === 0 ? 15 : 9;
+    b += '<line x1="' + x + '" y1="62" x2="' + x + '" y2="' + (62 + len) + '" stroke="#1f2330" stroke-width="' + (i % 10 === 0 ? 2 : 1) + '"/>';
+    if (i % 10 === 0) b += txt(x, 104, String(i / 10), 14, 'font-weight="700" direction="ltr"');
+  }
+  b += '<text x="' + (W - 12) + '" y="114" font-size="11" text-anchor="end" fill="#8a6d00">ס"מ</text>';
+  return svg(W, 126, b);
+}
+
+function vArray(v) {
+  var html = '<div class="arr" style="grid-template-columns:repeat(' + v.cols + ', auto)">';
+  for (var i = 0; i < v.rows * v.cols; i++) html += '<span>' + v.emoji + '</span>';
+  return html + '</div>';
+}
+
+function fitPoints(pts, W, H, m) {
+  var xs = pts.map(function (p) { return p[0]; }), ys = pts.map(function (p) { return -p[1]; });
+  var minX = Math.min.apply(null, xs), maxX = Math.max.apply(null, xs), minY = Math.min.apply(null, ys), maxY = Math.max.apply(null, ys);
+  var s = Math.min((W - 2 * m) / ((maxX - minX) || 1), (H - 2 * m) / ((maxY - minY) || 1));
+  var ox = (W - (maxX - minX) * s) / 2, oy = (H - (maxY - minY) * s) / 2;
+  return pts.map(function (p) { return [ox + (p[0] - minX) * s, oy + (-p[1] - minY) * s]; });
+}
+
+function vTri(v) {
+  var W = 360, H = 240, P = fitPoints(v.pts, W, H, 42), b = '';
+  var cx = (P[0][0] + P[1][0] + P[2][0]) / 3, cy = (P[0][1] + P[1][1] + P[2][1]) / 3;
+  b += '<polygon points="' + P.map(function (p) { return p.join(','); }).join(' ') + '" fill="#e8f0ff" stroke="#2f6fd6" stroke-width="4" stroke-linejoin="round"/>';
+  for (var i = 0; i < 3; i++) {
+    var A = P[i], B = P[(i + 1) % 3];
+    var mx = (A[0] + B[0]) / 2, my = (A[1] + B[1]) / 2;
+    var dx = B[0] - A[0], dy = B[1] - A[1], len = Math.sqrt(dx * dx + dy * dy) || 1;
+    var ux = dx / len, uy = dy / len, nx = -uy, ny = ux;
+    if ((mx + nx - cx) * nx + (my + ny - cy) * ny < 0) { nx = -nx; ny = -ny; }
+    var t = v.ticks ? v.ticks[i] : 0;
+    for (var k = 0; k < t; k++) {
+      var off = (k - (t - 1) / 2) * 6;
+      var px = mx + ux * off, py = my + uy * off;
+      b += '<line x1="' + (px - nx * 8) + '" y1="' + (py - ny * 8) + '" x2="' + (px + nx * 8) + '" y2="' + (py + ny * 8) + '" stroke="#e5484d" stroke-width="3"/>';
+    }
+    if (v.labels) b += txt(mx + nx * 22, my + ny * 22 + 5, v.labels[i], 15, 'font-weight="700"');
+  }
+  if (v.right >= 0) {
+    var V = P[v.right], U = P[(v.right + 1) % 3], Wp = P[(v.right + 2) % 3], s = 16;
+    var ul = Math.hypot(U[0] - V[0], U[1] - V[1]), wl = Math.hypot(Wp[0] - V[0], Wp[1] - V[1]);
+    var u = [(U[0] - V[0]) / ul * s, (U[1] - V[1]) / ul * s], w = [(Wp[0] - V[0]) / wl * s, (Wp[1] - V[1]) / wl * s];
+    b += '<path d="M' + (V[0] + u[0]) + ',' + (V[1] + u[1]) + ' L' + (V[0] + u[0] + w[0]) + ',' + (V[1] + u[1] + w[1]) + ' L' + (V[0] + w[0]) + ',' + (V[1] + w[1]) + '" fill="none" stroke="#1f2330" stroke-width="2.5"/>';
+  }
+  return svg(W, H, b);
+}
+
+function vFan(v) {
+  var W = 360, H = 230, ax = 180, ay = 20, y = 205, x0 = 30, x1 = 330, b = '';
+  b += '<polygon points="' + ax + ',' + ay + ' ' + x0 + ',' + y + ' ' + x1 + ',' + y + '" fill="#fff3df" stroke="#ff9f1c" stroke-width="4" stroke-linejoin="round"/>';
+  for (var i = 1; i < v.parts; i++) {
+    var bx = x0 + (x1 - x0) * i / v.parts + (i % 2 ? 18 : -14);
+    b += '<line x1="' + ax + '" y1="' + ay + '" x2="' + bx + '" y2="' + y + '" stroke="#ff9f1c" stroke-width="4"/>';
+  }
+  return svg(W, H, b);
+}
+
+function vPolyline(v) {
+  var pts = [[0, 0]], ang = 25;
+  v.segs.forEach(function (s, i) {
+    var a = (i % 2 ? -ang : ang) * Math.PI / 180, last = pts[pts.length - 1];
+    pts.push([last[0] + s * Math.cos(a), last[1] + s * Math.sin(a)]);
+  });
+  var W = 360, H = 190, P = fitPoints(pts, W, H, 36), b = '';
+  b += '<polyline points="' + P.map(function (p) { return p.join(','); }).join(' ') + '" fill="none" stroke="#6c4cf5" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>';
+  P.forEach(function (p) { b += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="5" fill="#1f2330"/>'; });
+  for (var i = 0; i < v.segs.length; i++) {
+    var A = P[i], B = P[i + 1], mx = (A[0] + B[0]) / 2, my = (A[1] + B[1]) / 2;
+    b += txt(mx, my - 14, v.segs[i] + ' ס"מ', 15, 'font-weight="700"');
+  }
+  return svg(W, H, b);
+}
+
+init();
+</script>
+</body>
+</html>
